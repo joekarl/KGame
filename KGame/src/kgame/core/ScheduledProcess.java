@@ -15,7 +15,10 @@ public abstract class ScheduledProcess extends BaseProcess implements Runnable {
     private boolean _infinite;
 
     public ScheduledProcess(long requestedDT,long numberOfLoops, boolean immediate){
-        _requestedDT = requestedDT;
+        //for nanoseconds
+        _requestedDT = requestedDT * 1000000L;
+        //for milliseconds
+        //_requestedDT = requestedDT;
         _numberOfLoops = numberOfLoops;
         _infinite = _numberOfLoops < 0;
         if(immediate) {

@@ -4,16 +4,19 @@
  */
 package kgame.core;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 /**
  *
  * @author karl ctr kirch
  */
 public abstract class MainLoop {
 
-    private final long ticksPerSecond;
     private final long skipTicks;
     private final long maxFrameSkip;
-    long nextTick = System.currentTimeMillis();
+    long nextTick;
+    long NANOSECOND = 1000000L;
     int loops;
     float interpolation;
     volatile boolean running = true;
@@ -21,8 +24,7 @@ public abstract class MainLoop {
     public abstract void tick(long dt);
 
     public MainLoop(long ticksPerSecond, long maxFrameSkip) {
-        this.ticksPerSecond = ticksPerSecond;
-        skipTicks = 1000 / ticksPerSecond;
+        skipTicks = 1000L * NANOSECOND / ticksPerSecond;
         this.maxFrameSkip = maxFrameSkip;
     }
 
@@ -32,12 +34,19 @@ public abstract class MainLoop {
 
     public void run(){
         running = true;
+        nextTick = System.nanoTime();
         while (running) {
             loops = 0;
-            while (System.currentTimeMillis() > nextTick && loops < maxFrameSkip) {
+            while (System.nanoTime() > nextTick && loops < maxFrameSkip) {
                 tick(skipTicks);
                 nextTick += skipTicks;
                 loops++;
+            }
+            
+            try {
+                Thread.sleep(1);
+            } catch (InterruptedException ex) {
+                Logger.getLogger(MainLoop.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
     }
