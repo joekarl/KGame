@@ -3,7 +3,7 @@
  * and open the template in the editor.
  */
 
-package kgame.core;
+package kgame.scheduling;
 
 import java.util.LinkedList;
 import java.util.Queue;

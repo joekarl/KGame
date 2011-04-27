@@ -3,7 +3,7 @@
  * and open the template in the editor.
  */
 
-package kgame.core;
+package kgame.scheduling;
 
 /**
  *
@@ -16,13 +16,13 @@ public abstract class ScheduledProcess extends BaseProcess implements Runnable {
 
     public ScheduledProcess(long requestedDT,long numberOfLoops, boolean immediate){
         //for nanoseconds
-        _requestedDT = requestedDT * 1000000L;
+        _requestedDT = requestedDT;
         //for milliseconds
         //_requestedDT = requestedDT;
         _numberOfLoops = numberOfLoops;
         _infinite = _numberOfLoops < 0;
         if(immediate) {
-            update(requestedDT);
+            _accumulator = 999999999L;
         }
     }
 
@@ -36,6 +36,10 @@ public abstract class ScheduledProcess extends BaseProcess implements Runnable {
 
     public ScheduledProcess(long requestedDT){
         this(requestedDT,-1,false);
+    }
+
+    public void setRequestedDT(long requestedDT){
+        _requestedDT = requestedDT;
     }
 
     @Override

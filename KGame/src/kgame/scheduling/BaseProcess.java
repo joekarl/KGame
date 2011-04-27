@@ -3,7 +3,7 @@
  * and open the template in the editor.
  */
 
-package kgame.core;
+package kgame.scheduling;
 
 /**
  *
@@ -16,7 +16,7 @@ public abstract class BaseProcess {
     private int id = nextId++;
 
 
-    boolean isDead = false;
+    private boolean isDead = false;
 
     public final int getId(){
         return id;
@@ -26,7 +26,7 @@ public abstract class BaseProcess {
         isDead = true;
     }
 
-    public boolean getIsDead(){
+    public final boolean getIsDead(){
         return isDead;
     }
 

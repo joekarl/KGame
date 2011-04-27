@@ -6,6 +6,7 @@ package kgame.core;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.lwjgl.Sys;
 
 /**
  *
@@ -15,39 +16,42 @@ public abstract class MainLoop {
 
     private final long skipTicks;
     private final long maxFrameSkip;
-    long nextTick;
-    long NANOSECOND = 1000000L;
+    long nextTick, lastRender, currentTime;
     int loops;
     float interpolation;
     volatile boolean running = true;
 
     public abstract void tick(long dt);
 
+    public void render(long dt) {
+    }
+
     public MainLoop(long ticksPerSecond, long maxFrameSkip) {
-        skipTicks = 1000L * NANOSECOND / ticksPerSecond;
+        skipTicks = 1000L / ticksPerSecond;
         this.maxFrameSkip = maxFrameSkip;
     }
 
-    public void stop(){
+    public void stop() {
         running = false;
     }
 
-    public void run(){
+    public void run() {
         running = true;
-        nextTick = System.nanoTime();
+        nextTick = getTime();
         while (running) {
             loops = 0;
-            while (System.nanoTime() > nextTick && loops < maxFrameSkip) {
+            while (getTime() > nextTick && loops < maxFrameSkip) {
                 tick(skipTicks);
                 nextTick += skipTicks;
                 loops++;
             }
-            
-            try {
-                Thread.sleep(1);
-            } catch (InterruptedException ex) {
-                Logger.getLogger(MainLoop.class.getName()).log(Level.SEVERE, null, ex);
-            }
+            currentTime = getTime();
+            render(currentTime - lastRender);
+            lastRender = currentTime;
         }
+    }
+
+    private long getTime() {
+        return (Sys.getTime() * 1000) / Sys.getTimerResolution();
     }
 }

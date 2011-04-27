@@ -7,11 +7,11 @@ import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import junit.framework.Assert;
-import kgame.core.MultitaskingScheduler;
-import kgame.core.BaseProcess;
-import kgame.core.ChainProcess;
+import kgame.scheduling.MultitaskingScheduler;
+import kgame.scheduling.BaseProcess;
+import kgame.scheduling.ChainProcess;
 import kgame.core.MainLoop;
-import kgame.core.ScheduledProcess;
+import kgame.scheduling.ScheduledProcess;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -22,9 +22,9 @@ import org.junit.Test;
  *
  * @author karl ctr kirch
  */
-public class SchedulerTests {
+public class SchedulerTest {
 
-    public SchedulerTests() {
+    public SchedulerTest() {
     }
 
     @BeforeClass
@@ -37,10 +37,12 @@ public class SchedulerTests {
 
     @Before
     public void setUp() {
+
     }
 
     @After
     public void tearDown() {
+        MultitaskingScheduler.defaultScheduler().killAllProcesses();
     }
 
     // TODO add test methods here.
@@ -49,7 +51,7 @@ public class SchedulerTests {
     @Test
     // <editor-fold defaultstate="collapsed" desc="testSchedulerCall">
     public void testSchedulerCall() {
-        MultitaskingScheduler ms = new MultitaskingScheduler();
+        MultitaskingScheduler ms = MultitaskingScheduler.defaultScheduler();
         final ValueObject<Boolean> processWasCalled = new ValueObject<Boolean>();
         BaseProcess p = new BaseProcess() {
 
@@ -70,7 +72,7 @@ public class SchedulerTests {
     @Test
     // <editor-fold defaultstate="collapsed" desc="testSchedulerCalls">
     public void testSchedulerCalls() {
-        MultitaskingScheduler ms = new MultitaskingScheduler();
+        MultitaskingScheduler ms = MultitaskingScheduler.defaultScheduler();
         final ValueObject<Integer> processCounter = new ValueObject<Integer>();
         processCounter.setValue(0);
         BaseProcess p = new BaseProcess() {
@@ -99,7 +101,7 @@ public class SchedulerTests {
     @Test
     // <editor-fold defaultstate="collapsed" desc="testRemoveSelf">
     public void testRemoveSelf() {
-        final MultitaskingScheduler ms = new MultitaskingScheduler();
+        final MultitaskingScheduler ms = MultitaskingScheduler.defaultScheduler();
         final ValueObject<Boolean> processWasCalled = new ValueObject<Boolean>();
         BaseProcess p = new BaseProcess() {
 
@@ -127,7 +129,7 @@ public class SchedulerTests {
     @Test
     // <editor-fold defaultstate="collapsed" desc="testScheduledProcess">
     public void testScheduledProcess() {
-        final MultitaskingScheduler ms = new MultitaskingScheduler();
+        final MultitaskingScheduler ms = MultitaskingScheduler.defaultScheduler();
         //sim main loop
         final MainLoop mainLoop = new MainLoop(100L, 5L) {
 
@@ -142,15 +144,14 @@ public class SchedulerTests {
 
 
         for (int i = 0; i < 1000; ++i) {
-            p = new ScheduledProcess(100, 100,true) {
+            
+            final ValueObject<Integer> processCounter = new ValueObject<Integer>();
+            processCounter.setValue(0);
+            p = new ScheduledProcess(100, 100, true) {
 
-                final ValueObject<Integer> processCounter = new ValueObject<Integer>();
                 long totalRunTime = System.currentTimeMillis();
 
-                {
-                    processCounter.setValue(0);
-                }
-
+                @Override
                 public void run() {
                     Integer value = processCounter.getValue();
                     processCounter.setValue(++value);
@@ -159,7 +160,7 @@ public class SchedulerTests {
                 @Override
                 public void kill() {
                     long time = (System.currentTimeMillis() - totalRunTime);
-                    if(time >= 10000 && time > 10000 + 30){
+                    if (time >= 10000 && time > 10000 + 30) {
                         System.out.println("time was too long. time was : " + time);
                     }
                 }
@@ -171,6 +172,7 @@ public class SchedulerTests {
 
         p = new ScheduledProcess(15000, 1) {
 
+            @Override
             public void run() {
                 mainLoop.stop();
                 Assert.assertTrue(true);
@@ -188,7 +190,7 @@ public class SchedulerTests {
     @Test
     // <editor-fold defaultstate="collapsed" desc="testChainProcess">
     public void testChainProcess() {
-        final MultitaskingScheduler ms = new MultitaskingScheduler();
+        final MultitaskingScheduler ms = MultitaskingScheduler.defaultScheduler();
         ChainProcess p = new ChainProcess();
 
         final MainLoop mainLoop = new MainLoop(100L, 5L) {
@@ -203,16 +205,17 @@ public class SchedulerTests {
 
         BaseProcess p1 = new ScheduledProcess(5000, 1) {
 
+            @Override
             public void run() {
                 Logger.getAnonymousLogger().log(Level.INFO, "Running p1");
             }
-
         };
 
         p.addProcess(p1);
 
         BaseProcess p2 = new ScheduledProcess(5000, 1) {
 
+            @Override
             public void run() {
                 Logger.getAnonymousLogger().log(Level.INFO, "Running p2");
             }
@@ -229,8 +232,8 @@ public class SchedulerTests {
                 mainLoop.stop();
             }
 
+            @Override
             public void run() {
-                
             }
         };
 
@@ -243,7 +246,7 @@ public class SchedulerTests {
     @Test
     // <editor-fold defaultstate="collapsed" desc="testLoop">
     public void testLoop() {
-        final MultitaskingScheduler ms = new MultitaskingScheduler();
+        final MultitaskingScheduler ms = MultitaskingScheduler.defaultScheduler();
         //sim main loop
         final MainLoop mainLoop = new MainLoop(100L, 5L) {
 
@@ -258,6 +261,7 @@ public class SchedulerTests {
 
         p = new ScheduledProcess(15000, 1) {
 
+            @Override
             public void run() {
                 mainLoop.stop();
                 Assert.assertTrue(true);

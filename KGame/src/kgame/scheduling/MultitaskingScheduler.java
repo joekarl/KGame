@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package kgame.core;
+package kgame.scheduling;
 
 import cern.colt.list.ObjectArrayList;
 import cern.colt.map.OpenIntObjectHashMap;
@@ -15,10 +15,19 @@ import java.util.List;
  */
 public class MultitaskingScheduler {
 
+    private static MultitaskingScheduler ms;
+
     private OpenIntObjectHashMap activeProcesses;
     private List<BaseProcess> processesToDelete,pausedProcesses;
 
-    public MultitaskingScheduler(){
+    public static MultitaskingScheduler defaultScheduler(){
+        if(ms == null){
+            ms = new MultitaskingScheduler();
+        }
+        return ms;
+    }
+
+    private MultitaskingScheduler(){
         activeProcesses = new OpenIntObjectHashMap();
         pausedProcesses = new ArrayList<BaseProcess>();
         processesToDelete = new ArrayList<BaseProcess>();
