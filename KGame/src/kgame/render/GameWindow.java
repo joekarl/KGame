@@ -38,7 +38,7 @@ public class GameWindow {
             int currentBpp = Display.getDisplayMode().getBitsPerPixel();
             // find a display mode at 800x600
 
-            DisplayMode mode = findDisplayMode(800, 600, currentBpp);
+            DisplayMode mode = findDisplayMode(320, 240, currentBpp);
 
             // if can't find a mode, notify the user the give up
 

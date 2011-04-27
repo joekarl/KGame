@@ -4,6 +4,8 @@
  */
 package kgame.entity.entityTypes;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import kgame.entity.Entity;
 import kgame.geometry.Rect2f;
 import kgame.scheduling.MultitaskingScheduler;
@@ -18,6 +20,7 @@ public abstract class BaseEntity extends Entity {
     private float x, y, z;
     private float dx, dy, dz;
     private Rect2f bounds = new Rect2f();
+    private Rect2f interpolatedBounds = new Rect2f();
     private float width, height;
     private long updateInterval = 100, accumulator;
     float interpolation;
@@ -36,10 +39,38 @@ public abstract class BaseEntity extends Entity {
         MultitaskingScheduler.defaultScheduler().addProcess(entityUpdateProc);
     }
 
+    public static boolean isColliding(BaseEntity a, BaseEntity b) {
+        if (a.getId() == b.getId()) {
+            return false;
+        }
+        
+        boolean isColliding = !((a.getInterpolatedBounds().getY1() > b.getInterpolatedBounds().getY2())
+                || (a.getInterpolatedBounds().getY2() < b.getInterpolatedBounds().getY1())
+                || (a.getInterpolatedBounds().getX1() > b.getInterpolatedBounds().getX2())
+                || (a.getInterpolatedBounds().getX2() < b.getInterpolatedBounds().getX1()));
+
+        return isColliding;
+    }
+
+    public void handleCollision(BaseEntity collidingEntity) {
+    }
+
+    public void killUpdater() {
+        entityUpdateProc.setIsDead();
+    }
+
+    public Rect2f getInterpolatedBounds() {
+        return interpolatedBounds;
+    }
+
     @Override
     public void render(long delta) {
         accumulator += delta;
         interpolation = updateInterval / 1000f * (float) accumulator / (float) updateInterval;
+        interpolatedBounds.setX1(bounds.getX1() + interpolation * dx);
+        interpolatedBounds.setX2(bounds.getX2() + interpolation * dx);
+        interpolatedBounds.setY1(bounds.getY1() + interpolation * dy);
+        interpolatedBounds.setY2(bounds.getY2() + interpolation * dy);
     }
 
     @Override

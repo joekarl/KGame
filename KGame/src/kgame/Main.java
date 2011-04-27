@@ -4,6 +4,7 @@
  */
 package kgame;
 
+import cern.colt.map.OpenIntObjectHashMap;
 import java.util.Random;
 import kgame.scheduling.MultitaskingScheduler;
 import kgame.scheduling.ScheduledProcess;
@@ -56,12 +57,36 @@ public class Main extends BasicGame {
         MultitaskingScheduler.defaultScheduler().addProcess(fpsProc);
 
         TestEntity e = null;
-        for (int i = 0; i < 10000; ++i) {
+        for (int i = 0; i < 1000; ++i) {
             e = new TestEntity();
             e.setWidth(4);
             e.setHeight(4);
             EntityManager.defaultManager().addEntity(e);
         }
+
+        ScheduledProcess collisionProc = new ScheduledProcess(100, false) {
+
+            OpenIntObjectHashMap checkedEntities = new OpenIntObjectHashMap();
+
+            @Override
+            public void run() {
+                for (Entity entity : EntityManager.defaultManager().getEntities()) {
+                    if (entity instanceof BaseEntity) {
+                        for (Entity testCollisionEntity : EntityManager.defaultManager().getEntities()) {
+                            if (testCollisionEntity instanceof BaseEntity && !checkedEntities.containsKey(testCollisionEntity.getId())) {
+                                if (BaseEntity.isColliding((BaseEntity) entity, (BaseEntity) testCollisionEntity)) {
+                                    ((BaseEntity) entity).handleCollision((BaseEntity) testCollisionEntity);
+                                }
+                            }
+                        }
+                    }
+                    checkedEntities.put(entity.getId(), entity);
+                }
+                checkedEntities.clear();
+            }
+        };
+
+        MultitaskingScheduler.defaultScheduler().addProcess(collisionProc);
 
     }
 
@@ -83,12 +108,12 @@ class TestEntity extends BaseEntity {
     public TestEntity() {
         this.setDx(r.nextInt(maxSpeed) - maxSpeed / 2);
         this.setDy(r.nextInt(maxSpeed) - maxSpeed / 2);
-        this.setX(r.nextInt(800));
-        this.setY(r.nextInt(600));
+        this.setX(r.nextInt(320));
+        this.setY(r.nextInt(240));
         cr = r.nextFloat();
         cg = r.nextFloat();
         cb = r.nextFloat();
-        this.setUpdateInterval(r.nextInt(1000));
+        this.setUpdateInterval(100);
     }
 
     @Override
@@ -97,12 +122,12 @@ class TestEntity extends BaseEntity {
 
         GL11.glColor3f(cr, cg, cb);
 
-        Rect2f bounds = getBounds();
+        Rect2f bounds = this.getInterpolatedBounds();
         GL11.glBegin(GL11.GL_QUADS);
-        GL11.glVertex2f(bounds.getX1() + getInterpolation() * getDx(), bounds.getY1() + getInterpolation() * getDy());
-        GL11.glVertex2f(bounds.getX1() + getInterpolation() * getDx(), bounds.getY2() + getInterpolation() * getDy());
-        GL11.glVertex2f(bounds.getX2() + getInterpolation() * getDx(), bounds.getY2() + getInterpolation() * getDy());
-        GL11.glVertex2f(bounds.getX2() + getInterpolation() * getDx(), bounds.getY1() + getInterpolation() * getDy());
+        GL11.glVertex2f(bounds.getX1(), bounds.getY1());
+        GL11.glVertex2f(bounds.getX1(), bounds.getY2());
+        GL11.glVertex2f(bounds.getX2(), bounds.getY2());
+        GL11.glVertex2f(bounds.getX2(), bounds.getY1());
         GL11.glEnd();
         bounds = null;
     }
@@ -117,7 +142,7 @@ class TestEntity extends BaseEntity {
             speed = r.nextInt(maxSpeed);
             this.setDx(speed);
         }
-        if (bounds.getX2() >= 800) {
+        if (bounds.getX2() >= 320) {
             speed = r.nextInt(maxSpeed);
             this.setDx(-speed);
         }
@@ -125,9 +150,15 @@ class TestEntity extends BaseEntity {
             speed = r.nextInt(maxSpeed);
             this.setDy(speed);
         }
-        if (bounds.getY2() >= 600) {
+        if (bounds.getY2() >= 240) {
             speed = r.nextInt(maxSpeed);
             this.setDy(-speed);
         }
+    }
+
+    @Override
+    public void handleCollision(BaseEntity collidingEntity) {
+        //EntityManager.defaultManager().removeEntity(this.getId());
+        //this.killUpdater();
     }
 }
